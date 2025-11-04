@@ -14,9 +14,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const lang = al.toLowerCase().startsWith('ar') ? 'ar' : 'en';
 
     const ipRaw = (req.headers['x-forwarded-for'] as string) || '';
-    const ip = ipRaw.split(',')[0] || ''; // Vercel يمرر IP هنا، ولو كان فاضي ipapi يستنتجه
+    const ip = ipRaw.split(',')[0] || ''; // ipapi سيستنتج IP إن تركته فارغ
 
-    // استخدم ipapi.co بدون مفتاح
+    // خدمة مجانية لا تحتاج access_key
     const geoRes = await fetch(`https://ipapi.co/${ip}/json/`, { cache: 'no-store' });
     const geo = await geoRes.json();
 
@@ -25,10 +25,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const timezone = geo?.timezone || 'Asia/Muscat';
 
     return res.status(200).json({ lang, country, currency, timezone });
-  } catch (e) {
-    // رجّع قيَم افتراضية آمنة لو فشل كل شيء
-    return res.status(200).json({
-      lang: 'ar', country: 'OM', currency: 'OMR', timezone: 'Asia/Muscat'
-    });
+  } catch {
+    // fallback آمن
+    return res.status(200).json({ lang: 'ar', country: 'OM', currency: 'OMR', timezone: 'Asia/Muscat' });
   }
 }
